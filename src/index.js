@@ -4,20 +4,14 @@ import PropTypes from 'prop-types';
 
 /* Presentational */
 import { View } from 'react-native';
-import Users from './pages/users';
+import Timing from './pages/timing';
 
 // import styles from './styles';
 
 export default class App extends Component {
-  static propTypes = {};
-
-  static defaultProps = {};
-
-  static state = {}
-
   render() {
     return (
-      <Users />
+      <Timing />
     );
   }
 }
