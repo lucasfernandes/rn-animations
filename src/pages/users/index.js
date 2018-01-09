@@ -9,6 +9,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Animated,
 } from 'react-native';
 
 import User from './components/User';
@@ -55,6 +56,7 @@ export default class App extends Component {
         color: '#E75A63',
       },
     ],
+    scrollOffset: new Animated.Value(0),
   }
 
   selectUser = (user) => {
@@ -73,7 +75,14 @@ export default class App extends Component {
 
   renderList = () => (
     <View style={styles.container}>
-      <ScrollView>
+      <ScrollView
+        onScroll={Animated.event([{ 
+          nativeEvent: {
+            contentOffset: { y: this.state.scrollOffset }
+          } 
+        }])}
+        scrollEventThrottle={16}
+      >
         { this.state.users.map(user =>
           <User
             key={user.id}
@@ -92,16 +101,37 @@ export default class App extends Component {
       <View style={styles.container}>
         <StatusBar barStyle="light-content" />
 
-        <View style={styles.header}>
+        <Animated.View 
+          style={[
+            styles.header,
+            {
+              height: this.state.scrollOffset.interpolate({
+                inputRange: [0, 140],
+                outputRange: [200, 70],
+                extrapolate: 'clamp',
+              })
+            }
+          ]}
+        >
           <Image
             style={styles.headerImage}
             source={userSelected ? { uri: userSelected.thumbnail } : null}
           />
 
-          <Text style={styles.headerText}>
+          <Animated.Text 
+            style={[
+              styles.headerText,
+              {
+                fontSize: this.state.scrollOffset.interpolate({
+                  inputRange: [120, 140],
+                  outputRange: [24, 16],
+                  extrapolate: 'clamp',
+                })
+              }
+            ]}>
             { userSelected ? userSelected.name : 'GoNative' }
-          </Text>
-        </View>
+          </Animated.Text>
+        </Animated.View>
 
         { this.state.userInfoVisible
           ? this.renderDetail()
@@ -120,7 +150,7 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 40 : 20,
     paddingHorizontal: 15,
     backgroundColor: '#2E93E5',
-    height: 200,
+    // height: 200,
   },
 
   headerImage: {
@@ -128,7 +158,7 @@ const styles = StyleSheet.create({
   },
 
   headerText: {
-    fontSize: 24,
+    // fontSize: 24,
     fontWeight: '900',
     color: '#FFF',
     backgroundColor: 'transparent',
