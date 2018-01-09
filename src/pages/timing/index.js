@@ -7,40 +7,72 @@ import { View, Animated } from 'react-native';
 
 import styles from './styles';
 
-const ballY = new Animated.Value(0);
-const ballX = Animated.divide(ballY, 2);
-Animated.sub
-
-// divide, mutiply, add
-
 export default class Timing extends Component {
   state = {
-    ballY: ballY,
-    ballX: ballX,
+    ballY: new Animated.Value(0),
+    ballX: new Animated.Value(0),
   };
 
-  timing = () => {
-    Animated.timing(this.state.ballY, {
-      toValue: 500,
-      duration: 1000,
-    }).start();
-  }
+  // timingY = () =>  Animated.timing(this.state.ballY, {
+  //   toValue: 200,
+  //   duration: 500,
+  // });
+  
+  // timingX = () => Animated.timing(this.state.ballX, {
+  //   toValue: 200,
+  //   duration: 500,
+  // });
+  
+  // Animated.parallel - executes in parallel
+  // Animated.sequence - executes in sequence (one after another)
+  // Animated.sequence([
+  //   this.timingY(),
+  //   Animated.delay(1000),
+  //   this.timingX(),
+  // ]).start();
 
-  spring = () => {
-    Animated.spring(this.state.ballY, {
-      toValue: 300,
-      bounciness: 30,
-    }).start();
-  }
 
-  decay = () => {
-    Animated.decay(this.state.ballY, {
-      velocity: 1.1 ,
-    }).start();
-  }
+  // executes each animation after a specifica time (paralel after this time)
+  // Animated.stagger(300, [
+  //   this.timingY(),
+  //   Animated.delay(1000),
+  //   this.timingX(),
+  // ]).start();
 
   componentDidMount() {
-    this.decay();
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(this.state.ballY, {
+          toValue: 200,
+          duration: 500,
+        }),
+
+        Animated.delay(500),
+
+        Animated.timing(this.state.ballX, {
+          toValue: 200,
+          duration: 500,
+        }),
+
+        Animated.delay(500),
+
+        Animated.timing(this.state.ballY, {
+          toValue: 0,
+          duration: 500,
+        }),
+
+        Animated.delay(500),
+
+        Animated.timing(this.state.ballX, {
+          toValue: 0,
+          duration: 500,
+        }),
+
+        Animated.delay(500),
+      ]), {
+        iterations: 2,
+      },
+     ).start();
   }
 
   render() {
