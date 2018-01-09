@@ -3,35 +3,57 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 /* Presentational */
-import { View, Animated } from 'react-native';
+import { View, Animated, PanResponder } from 'react-native';
 
 import styles from './styles';
 
 export default class Timing extends Component {
   state = {
-    ballY: new Animated.Value(0),
+    ball: new Animated.ValueXY({ x: 0, y: 0 }),
   };
+
+  componentWillMount() {
+    this._panResponder = PanResponder.create({
+      onMoveShouldSetPanResponder: (e, gestureState) => true,
+
+      onPanResponderGrant: (e, gestureState) => {
+        this.state.ball.setOffset({
+          x: this.state.ball.x._value,
+          y: this.state.ball.y._value,
+        });
+
+        this.state.ball.setValue({ x: 0, y: 0 });
+      },
+
+      onPanResponderRelease: () => {
+        this.state.ball.flattenOffset();
+      },
+
+      onPanResponderMove: Animated.event([null, {
+        dx: this.state.ball.x,
+        dy: this.state.ball.y,
+      }], { listener: (e, gestureState) => {
+        console.log(gestureState);
+      }}),
+    });
+  }
 
   componentDidMount() {
     
-    Animated.timing(this.state.ballY, {
-      toValue: 500,
-      duration: 1000,
-    }).start();
   }
 
   render() {
     return (
       <View style={styles.container}>
-        <Animated.View style={[
+        <Animated.View
+          {...this._panResponder.panHandlers}
+          style={[
           styles.ball,
           { 
-            top: this.state.ballY,
-            opacity: this.state.ballY.interpolate({
-              inputRange: [0, 300],
-              outputRange: [1, 0.2],
-              extrapolate: 'clamp',
-            }),
+            transform: [
+              { translateX: this.state.ball.x },
+              { translateY: this.state.ball.y },
+            ]
           }
         ]} />
       </View>
