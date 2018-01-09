@@ -7,9 +7,16 @@ import { View, Animated } from 'react-native';
 
 import styles from './styles';
 
+const ballY = new Animated.Value(0);
+const ballX = Animated.divide(ballY, 2);
+Animated.sub
+
+// divide, mutiply, add
+
 export default class Timing extends Component {
   state = {
-    ballY: new Animated.Value(0),
+    ballY: ballY,
+    ballX: ballX,
   };
 
   timing = () => {
@@ -28,7 +35,7 @@ export default class Timing extends Component {
 
   decay = () => {
     Animated.decay(this.state.ballY, {
-      velocity: 1.1,
+      velocity: 1.1 ,
     }).start();
   }
 
@@ -41,7 +48,10 @@ export default class Timing extends Component {
       <View style={styles.container}>
         <Animated.View style={[
           styles.ball,
-          { top: this.state.ballY }
+          { 
+            top: this.state.ballY,
+            left: this.state.ballX,
+          }
         ]} />
       </View>
     );
