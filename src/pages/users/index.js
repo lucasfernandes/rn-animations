@@ -10,9 +10,14 @@ import {
   ScrollView,
   TouchableOpacity,
   Animated,
+  Dimensions,
+  PanResponder
 } from 'react-native';
 
 import User from './components/User';
+import styles from './styles';
+
+const { width } = Dimensions.get('window');
 
 export default class App extends Component {
   state = {
@@ -21,8 +26,8 @@ export default class App extends Component {
     users: [
       {
         id: 1,
-        name: 'Diego Fernandes',
-        description: 'Head de programação!',
+        name: 'React Native',
+        description: 'Everything you need to learn',
         avatar: 'https://avatars0.githubusercontent.com/u/2254731?s=460&v=4',
         thumbnail: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=400&q=80',
         likes: 200,
@@ -30,8 +35,8 @@ export default class App extends Component {
       },
       {
         id: 2,
-        name: 'Robson Marques',
-        description: 'Head de empreendedorismo!',
+        name: 'Books',
+        description: 'You got to read more',
         avatar: 'https://avatars2.githubusercontent.com/u/861751?s=460&v=4',
         thumbnail: 'https://images.unsplash.com/photo-1490633874781-1c63cc424610?auto=format&fit=crop&w=400&q=80',
         likes: 350,
@@ -39,8 +44,8 @@ export default class App extends Component {
       },
       {
         id: 3,
-        name: 'Cleiton Souza',
-        description: 'Head de mindset!',
+        name: 'Letters',
+        description: 'Do you remember that?',
         avatar: 'https://avatars0.githubusercontent.com/u/4669899?s=460&v=4',
         thumbnail: 'https://images.unsplash.com/photo-1506440905961-0ab11f2ed5bc?auto=format&fit=crop&w=400&q=80',
         likes: 250,
@@ -48,8 +53,8 @@ export default class App extends Component {
       },
       {
         id: 4,
-        name: 'Robson Marques',
-        description: 'Head de empreendedorismo!',
+        name: 'Books',
+        description: 'You got to read more',
         avatar: 'https://avatars2.githubusercontent.com/u/861751?s=460&v=4',
         thumbnail: 'https://images.unsplash.com/photo-1490633874781-1c63cc424610?auto=format&fit=crop&w=400&q=80',
         likes: 350,
@@ -57,11 +62,45 @@ export default class App extends Component {
       },
     ],
     scrollOffset: new Animated.Value(0),
+    listProgress: new Animated.Value(0),
+    listOpacity: new Animated.Value(1),
+    userInfoProgress: new Animated.Value(0),
+    scrollStarted: false,
+  }
+
+  componentDidMount() {
+    Animated.spring(this.state.scrollOffset, {
+      toValue: 200,
+      speed: 5,
+      bounciness: 20,
+    }).start();
   }
 
   selectUser = (user) => {
     this.setState({ userSelected: user });
-    this.setState({ userInfoVisible: true });
+
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(this.state.listProgress, {
+          toValue: 100,
+          duration: 300,
+        }),
+  
+        Animated.timing(this.state.listOpacity, {
+          toValue: 0,
+          duration: 300,
+        }),
+      ]),
+
+      Animated.timing(this.state.userInfoProgress, {
+        toValue: 100,
+        duration: 500,
+      }),
+    ]).start(() => {
+      this.setState({ 
+        userInfoVisible: true,
+      });
+    });
   }
 
   renderDetail = () => (
@@ -74,8 +113,21 @@ export default class App extends Component {
   )
 
   renderList = () => (
-    <View style={styles.container}>
+    <Animated.View 
+        style={[
+          styles.container,
+          { 
+            transform: [
+              { translateX: this.state.listProgress.interpolate({
+                inputRange: [0, 100],
+                outputRange: [0, width],
+              })}
+            ],
+          },
+          { opacity: this.state.listOpacity },
+        ]}>
       <ScrollView
+        onScrollBeginDrag={() => { this.setState({ scrollStarted: true }) }}
         onScroll={Animated.event([{ 
           nativeEvent: {
             contentOffset: { y: this.state.scrollOffset }
@@ -91,12 +143,12 @@ export default class App extends Component {
           />
         )}
       </ScrollView>
-    </View>
+    </Animated.View>
   )
 
   render() {
     const { userSelected } = this.state;
-
+    
     return (
       <View style={styles.container}>
         <StatusBar barStyle="light-content" />
@@ -105,16 +157,24 @@ export default class App extends Component {
           style={[
             styles.header,
             {
-              height: this.state.scrollOffset.interpolate({
+              height: this.state.scrollStarted ? this.state.scrollOffset.interpolate({
                 inputRange: [0, 140],
                 outputRange: [200, 70],
                 extrapolate: 'clamp',
-              })
+              }) : this.state.scrollOffset,
             }
           ]}
         >
-          <Image
-            style={styles.headerImage}
+          <Animated.Image
+            style={[
+              styles.headerImage,
+              { 
+                opacity: this.state.userInfoProgress.interpolate({
+                  inputRange: [0, 100],
+                  outputRange: [0, 1],
+                }),
+              }
+            ]}
             source={userSelected ? { uri: userSelected.thumbnail } : null}
           />
 
@@ -122,15 +182,37 @@ export default class App extends Component {
             style={[
               styles.headerText,
               {
-                fontSize: this.state.scrollOffset.interpolate({
+                fontSize: this.state.scrollStarted ? this.state.scrollOffset.interpolate({
                   inputRange: [120, 140],
                   outputRange: [24, 16],
                   extrapolate: 'clamp',
-                })
+                }) : 24,
+                transform: [{
+                  translateX: this.state.userInfoProgress.interpolate({
+                    inputRange: [0, 100],
+                    outputRange: [0, width],
+                  }),
+                }]
               }
             ]}>
-            { userSelected ? userSelected.name : 'GoNative' }
+            Animations
           </Animated.Text>
+
+          <Animated.Text 
+            style={[
+              styles.headerText,
+              {
+                transform: [{
+                  translateX: this.state.userInfoProgress.interpolate({
+                    inputRange: [0, 100],
+                    outputRange: [width * -1, 0],
+                  }),
+                }]
+              }
+            ]}>
+            { userSelected ? userSelected.name : null }
+          </Animated.Text>
+          
         </Animated.View>
 
         { this.state.userInfoVisible
@@ -140,30 +222,3 @@ export default class App extends Component {
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-
-  header: {
-    paddingTop: Platform.OS === 'ios' ? 40 : 20,
-    paddingHorizontal: 15,
-    backgroundColor: '#2E93E5',
-    // height: 200,
-  },
-
-  headerImage: {
-    ...StyleSheet.absoluteFillObject,
-  },
-
-  headerText: {
-    // fontSize: 24,
-    fontWeight: '900',
-    color: '#FFF',
-    backgroundColor: 'transparent',
-    position: 'absolute',
-    left: 15,
-    bottom: 20,
-  },
-});
